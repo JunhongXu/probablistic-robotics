@@ -1,5 +1,5 @@
 import numpy as np
-from utils import plot_cov_ellipse
+from gaussian_filters.utils import plot_cov_ellipse
 import matplotlib.pyplot as plt
 
 

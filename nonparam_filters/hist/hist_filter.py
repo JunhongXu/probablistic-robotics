@@ -1,10 +1,10 @@
 import matplotlib.cm as cm           # import colormap stuff!
 import numpy as np
-from kf.kf import run_pred, KalmanFilter 
+# from kf.kf import run_pred, KalmanFilter 
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
 from scipy.stats import multivariate_normal
-from hist.state_tb import StateTable
+from nonparam_filters.hist.state_tb import StateTable
 
 
 def multivariate_gaussian(x, mean, cov):
@@ -19,6 +19,34 @@ def multivariate_gaussian(x, mean, cov):
 
 def gaussian_pdf(x, mean, variance):
     return 1 / np.sqrt(2 * np.pi * variance) * np.exp(-(mean - x) ** 2 / (2. * variance))
+
+
+def init_belief(hist_filter, init_mean, init_cov):
+    """
+    Initialize the belief for the histogram filter based on the mean and covariance matrix
+    """
+
+    for k in range(hist_filter.n_states):
+        state_value = hist_filter.state_tb.value(k)
+        hist_filter.bel[k] = multivariate_gaussian(state_value, init_mean, init_cov)
+    # normalize
+    hist_filter.bel = hist_filter.bel / np.sum(hist_filter.bel)
+
+
+class NonLinearMotionModel(object):
+    """
+    Defines the nonlinear motion [x, y, \theta] = [x + cos\theta, y+sin\theta, \theta].
+    It returns the probability density p(x' | u', x) 
+    """
+    def __init__(self):
+        self.cov = np.array([[0.001, 0.0, 0.0], [0.0, 0.001, 0.0], [0.0, 0.0, 0.001]])
+    
+    def __call__(self, curr_state, u, prev_state):
+        mean_state = prev_state.flatten()
+        mean_state[0] = mean_state[0] + u * np.cos(mean_state[2])
+        mean_state[1] = mean_state[1] + u * np.sin(mean_state[2])
+        prob_density = multivariate_gaussian(curr_state, mean_state, self.cov)
+        return prob_density
 
 
 class MeasurementModel(object):
@@ -71,8 +99,9 @@ class HistFilter(object):
         # the number of states should be the same as the state table
         self.n_states = tb.n_state
         # initialize the belief
-        self.bel = init_bel
-        self.init_bel = init_bel
+        init_bel = init_bel if init_bel is not None else np.full(self.n_states, 1./self.n_states)
+        self.bel = init_bel 
+        self.init_bel = init_bel 
 
     def predict(self, u):
         """
@@ -88,9 +117,9 @@ class HistFilter(object):
             for s_prev in range(self.n_states):
                 s_prev_val = self.state_tb.value(s_prev)
                 transition_prob = self.motion_model(s_curr_val, u, s_prev_val)
+
                 # weighted average
                 prob += transition_prob * self.bel[s_prev]
-            # print("Probability of", s_curr_val, "is", prob)
             bel_cp[s_curr] = prob
         normalizer = 1 / np.sum(bel_cp)        
         self.bel = bel_cp * normalizer

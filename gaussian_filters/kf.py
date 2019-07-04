@@ -1,7 +1,7 @@
 import numpy as np
 import numpy as np
 from matplotlib import pyplot as plt
-from utils import plot_cov_ellipse
+from gaussian_filters.utils import plot_cov_ellipse
 
 # 1 second interval for two time points
 delta_t = 1.0
@@ -71,7 +71,7 @@ def run_pred(kalman_filter, n_times=6):
     for t in range(1, n_times + 1):
         ax = plt.gca()
         kalman_filter.predict(mean_u)
-        print('Kalman filter covariance at time', i, 'is', kalman_filter.cov)
+        print('Kalman filter covariance at time', t, 'is', kalman_filter.cov)
     cov = kalman_filter.cov
     mean = kalman_filter.mean
     plot_cov_ellipse(cov, mean, ax=ax, nstd=1, alpha=0.3, lw=2, facecolor=random_color[t-1], edgecolor='black')
