@@ -8,11 +8,10 @@ from gaussian_filters.kf import KalmanFilter, run_pred
 def run_hist_pred(hist_filter):
     # we only apply 0 control
     hist_filter.predict(0.0)
-    plot_dist(hist_filter)
+    plot_hist_dist(hist_filter)
 
 
-def plot_dist(hist_filter, use_angle=False, **kwargs):
-
+def plot_hist_dist(hist_filter, use_angle=False, **kwargs):
     if use_angle:
         n = hist_filter.state_tb.num_grids[2]
     else:
@@ -44,8 +43,6 @@ def plot_dist(hist_filter, use_angle=False, **kwargs):
             else:
                 legend = ""
             plt.scatter(values[:, 0], values[:, 1], s=1, label=legend, **kwargs)
-            # plt.xlim
-            # plt.show()
 
 
 def plot_measurement_update(init_state, hist_filter):
@@ -61,10 +58,10 @@ def plot_measurement_update(init_state, hist_filter):
     x = true_state.flatten()[0]
     measurement = x + np.random.randn() * np.sqrt(10.0)
     # plot the distribution before measurement update
-    plot_dist(hist_filter, use_angle=False, color='gray')
+    plot_hist_dist(hist_filter, use_angle=False, color='gray')
     # measurement update
     hist_filter.update(measurement)
-    plot_dist(hist_filter, use_angle=False, color='red')
+    plot_hist_dist(hist_filter, use_angle=False, color='red')
 
 
 
@@ -125,29 +122,46 @@ def run_sol_one():
 
 def run_sol_two():
     """
-    The solution of the exercise 4.2
+    The solution of the exercise 4.6.2 (a) and 4.6.2 (b)
     """
+
     # parameters of the histogram filter
     x_range = [-1.8, 1.8]
     y_range = [-1.8, 1.8]
     theta_range = [0.0, 2 * np.pi]
     interval = (x_range, y_range, theta_range)
-    ngrid = [9, 9, 4]
+    ngrid = [15, 15, 8]
     names = ['x', 'y', 'theta']
     tb = StateTable(interval, ngrid, names)
     motion_model = NonLinearMotionModel()
+    # C = [1.0, 0.0, 0.0] and the variance=0.01
+    measurement_model = MeasurementModel(np.array([[1.0, 0.0, 0.0]]), 0.01) 
 
-    hist_filter = HistFilter(None, tb, motion_model, None)
+    hist_filter = HistFilter(None, tb, motion_model, measurement_model)
 
     # initialize the belief 
     init_mean = np.array([0.0, 0.0, 0.0])
     init_cov = np.array([[0.01, 0.0, 0.0], [0.0, 0.01, 0.0], [0.0, 0.0, 10000]])
     init_belief(hist_filter, init_mean, init_cov)
+
+    print("Plotting the solution for 4.6.2 (a)")
     hist_filter.predict(1.0)
-    plot_dist(hist_filter, use_angle=True)
+    plot_hist_dist(hist_filter, use_angle=True)
+    plt.legend()
+    plt.show()
+
+    print("Plotting the solution for 4.6.2 (b)")
+    # sample the state from the motion model 
+    next_state = motion_model.sample(1.0, init_mean)
+    # we can not directly observe the state, we only observe a noisy measurement around that state
+    measurement = measurement_model.sample(next_state)
+    print("The sampled measurement is", measurement)
+    # measurement update
+    hist_filter.update(measurement)
+    plot_hist_dist(hist_filter, use_angle=True)
     plt.legend()
     plt.show()
 
 if __name__ == "__main__":
-    run_sol_one()
-    # run_sol_two()
+    # run_sol_one()
+    run_sol_two()

@@ -47,6 +47,13 @@ class NonLinearMotionModel(object):
         mean_state[1] = mean_state[1] + u * np.sin(mean_state[2])
         prob_density = multivariate_gaussian(curr_state, mean_state, self.cov)
         return prob_density
+    
+    def sample(self, u, x):
+        mean_state = x.flatten()
+        mean_state[0] = mean_state[0] + u * np.cos(mean_state[2])
+        mean_state[1] = mean_state[1] + u * np.sin(mean_state[2])
+        # sample the next state
+        return np.random.multivariate_normal(mean_state, self.cov)
 
 
 class MeasurementModel(object):
@@ -61,9 +68,18 @@ class MeasurementModel(object):
         """
         Gives the probability density of p(z | x)
         """
+        measurement = measurement.flatten()
         state = state.reshape(-1, 1)
         mean = self.C @ state
         return gaussian_pdf(measurement, mean[0, 0], self.Q)
+    
+    def sample(self, state):
+        """
+        Samples one measurement from the measurement model.
+        """
+        state = state.reshape(-1, 1)
+        mean = self.C @ state
+        return np.random.normal(loc=mean, scale=self.Q)
 
 class MotionModel(object):
     def __init__(self, A, B, R):
