@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from nonparam_filters.hist.hist_filter import HistFilter, MotionModel, MeasurementModel, NonLinearMotionModel, init_belief
+from nonparam_filters.hist.hist_filter import HistFilter, init_belief
+from nonparam_filters.models import MotionModel, MeasurementModel, NonLinearMotionModel
 from nonparam_filters.hist.state_tb import StateTable
 from gaussian_filters.kf import KalmanFilter, run_pred
 
@@ -163,5 +164,5 @@ def run_sol_two():
     plt.show()
 
 if __name__ == "__main__":
-    # run_sol_one()
+    run_sol_one()
     run_sol_two()
