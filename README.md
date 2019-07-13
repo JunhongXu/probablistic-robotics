@@ -6,7 +6,7 @@
 
 - [x] [Chapter 3 Gaussian Filters: Kalman Filter, Extended Kalman Filter (in Python)](gaussian_filters/).
 
-- [ ] [Chapter 4 Nonparameteric Filters: Histgram and Particle Filters (in Python, ongoing)](nonparam_filters/).
+- [x] [Chapter 4 Nonparameteric Filters: Histgram and Particle Filters (in Pythong)](nonparam_filters/).
 - [ ] Chapter 5 Motion models.
 - [ ] Chapter 6 Measurement models.
 
